@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Jump Metrics - Athletic Performance Analysis</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					colors: {
+						primary: {
+							50: '#eff6ff',
+							500: '#3b82f6',
+							600: '#2563eb',
+							700: '#1d4ed8',
+							900: '#1e3a8a'
+						}
+					}
+				}
+			}
+		}
+	</script>
+	<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-gray-50 font-sans">
+	<!-- Navigation Header -->
+	<nav class="bg-white shadow-sm border-b border-gray-200 fixed w-full top-0 z-50">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="flex justify-between h-16">
+				<div class="flex items-center">
+					<div class="flex-shrink-0 flex items-center">
+						<div class="bg-primary-600 rounded-lg p-2 mr-3">
+							<i data-lucide="activity" class="w-6 h-6 text-white"></i>
+						</div>
+						<span class="text-xl font-bold text-gray-900">Jump Metrics</span>
+					</div>
+				</div>
+				<div class="flex items-center space-x-4" id="navActions" style="display: none;">
+					<div class="flex items-center space-x-3">
+						<div class="bg-gray-100 rounded-full p-2">
+							<i data-lucide="user" class="w-5 h-5 text-gray-600"></i>
+						</div>
+						<div class="flex flex-col">
+							<span id="userDisplayName" class="text-sm font-medium text-gray-900">User</span>
+							<span id="userRole" class="text-xs text-gray-500">Member</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nav>
+
+	<!-- Main Layout -->
+	<div class="flex h-screen pt-16">
+		<!-- Sidebar Navigation -->
+		<aside class="w-64 bg-white shadow-sm border-r border-gray-200 fixed h-full overflow-y-auto" id="sidebar" style="display: none;">
+			<div class="p-4">
+				<nav class="space-y-2">
+					<a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg bg-primary-50 text-primary-700 border border-primary-200" data-section="upload">
+						<i data-lucide="upload" class="w-5 h-5 mr-3"></i>
+						<span>Upload Video</span>
+					</a>
+					<a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors" data-section="session">
+						<i data-lucide="video" class="w-5 h-5 mr-3"></i>
+						<span>Video Analysis</span>
+					</a>
+					<a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors" data-section="analyze">
+						<i data-lucide="play-circle" class="w-5 h-5 mr-3"></i>
+						<span>Process Video</span>
+					</a>
+					<a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors" data-section="results">
+						<i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i>
+						<span>Results</span>
+					</a>
+					<a href="#" class="nav-item flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors" data-section="jumps">
+						<i data-lucide="eye" class="w-5 h-5 mr-3"></i>
+						<span>Review</span>
+					</a>
+					<a href="#" class="nav-item admin-only flex items-center px-4 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors" data-section="admin" style="display: none;">
+						<i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+						<span>Admin Panel</span>
+					</a>
+				</nav>
+				
+				<!-- User Info & Sign Out -->
+				<div class="mt-8 pt-4 border-t border-gray-200">
+					<div class="px-4 py-2">
+						<p class="text-sm text-gray-600 mb-2">Logged in as:</p>
+						<p id="currentUser" class="text-sm font-medium text-gray-900"></p>
+					</div>
+					<button id="signOutBtn" class="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors">
+						<i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+						<span>Sign Out</span>
+					</button>
+				</div>
+			</div>
+		</aside>
+
+		<!-- Main Content -->
+		<main class="flex-1 overflow-y-auto" id="mainContent">
+			<!-- Login/Register Section (shown before login) -->
+			<section id="authSection" class="min-h-screen flex items-center justify-center">
+				<div class="max-w-md w-full">
+					<div class="bg-white rounded-xl shadow-lg p-8">
+						<div class="text-center mb-8">
+							<div class="bg-primary-600 rounded-full p-3 w-16 h-16 mx-auto mb-4">
+								<i data-lucide="activity" class="w-10 h-10 text-white"></i>
+							</div>
+							<h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome to Jump Metrics</h2>
+							<p class="text-gray-600"><span id="authSubtitle">Sign in to analyze your athletic performance</span></p>
+						</div>
+						<form id="loginForm" class="space-y-6">
+							<div>
+								<label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+								<input type="text" id="username" required 
+									class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
+									placeholder="Enter your username" />
+							</div>
+							<div>
+								<label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+								<input type="password" id="password" required 
+									class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
+									placeholder="Enter your password" />
+							</div>
+							<button type="submit" 
+								class="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium">
+								<div class="flex items-center justify-center">
+									<i data-lucide="log-in" class="w-5 h-5 mr-2"></i>
+									Sign In
+								</div>
+							</button>
+			</form>
+
+						<!-- Divider and toggle -->
+						<div class="flex items-center my-4">
+							<div class="flex-1 h-px bg-gray-200"></div>
+							<span class="px-3 text-xs text-gray-500">OR</span>
+							<div class="flex-1 h-px bg-gray-200"></div>
+						</div>
+						<p class="text-center text-sm text-gray-600">Don't have an account? 
+							<button id="showRegister" class="text-primary-600 hover:text-primary-700 font-medium" type="button">Create one</button>
+						</p>
+
+						<!-- Register Form (hidden by default) -->
+						<form id="registerForm" class="space-y-6 hidden mt-6">
+							<div class="grid grid-cols-1 gap-4">
+								<div>
+									<label for="regUsername" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+									<input type="text" id="regUsername" required 
+										class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
+										placeholder="Choose a username" />
+								</div>
+								<div>
+									<label for="regEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+									<input type="email" id="regEmail" required 
+										class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
+										placeholder="you@example.com" />
+								</div>
+								<div>
+									<label for="regPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+									<input type="password" id="regPassword" required 
+										class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" 
+										placeholder="At least 8 characters" />
+								</div>
+							</div>
+							<button type="submit" 
+								class="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium">
+								<div class="flex items-center justify-center">
+									<i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
+									Create Account
+								</div>
+							</button>
+							<p class="text-center text-sm text-gray-600">Already have an account? 
+								<button id="showLogin" class="text-primary-600 hover:text-primary-700 font-medium" type="button">Sign in</button>
+							</p>
+						</form>
+						<div id="loginInfo" class="mt-4 text-sm text-center"></div>
+					</div>
+				</div>
+		</section>
+
+			<!-- Main App Content (shown after login) -->
+			<div class="pl-64" id="contentWithSidebar" style="display: none;">
+				<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+
+				<!-- Upload Section -->
+				<section id="uploadSection" class="hidden">
+					<div class="mb-8">
+						<h1 class="text-3xl font-bold text-gray-900 mb-2">Upload Video</h1>
+						<p class="text-gray-600">Upload your jump video to start analyzing your athletic performance</p>
+					</div>
+					
+					<div class="bg-white rounded-xl shadow-lg p-8 mb-6">
+						<form id="uploadForm" class="space-y-6">
+							<div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-primary-400 hover:bg-primary-50 transition-colors cursor-pointer">
+								<div class="space-y-4">
+									<div class="bg-primary-100 rounded-full p-4 w-16 h-16 mx-auto">
+										<i data-lucide="upload-cloud" class="w-8 h-8 text-primary-600"></i>
+									</div>
+									<div>
+										<h3 class="text-lg font-semibold text-gray-900 mb-2">Drop your video here</h3>
+										<p class="text-gray-600 mb-4">or click to browse files</p>
+										<div class="text-sm text-gray-500">
+											<p>Supports: MP4, MOV, AVI • Max file size: 500MB</p>
+										</div>
+									</div>
+									<input type="file" id="videoFile" accept="video/*" required class="hidden" />
+								</div>
+							</div>
+							
+							<div id="fileInfo" class="hidden bg-gray-50 rounded-lg p-4">
+								<div class="flex items-center space-x-3">
+									<div class="bg-green-100 rounded-full p-2">
+										<i data-lucide="file-video" class="w-5 h-5 text-green-600"></i>
+									</div>
+									<div class="flex-1">
+										<p id="fileName" class="font-medium text-gray-900"></p>
+										<p id="fileSize" class="text-sm text-gray-500"></p>
+									</div>
+									<button type="button" id="removeFile" class="text-red-600 hover:text-red-800">
+										<i data-lucide="x" class="w-5 h-5"></i>
+									</button>
+								</div>
+							</div>
+							
+							<button type="submit" class="w-full bg-primary-600 text-white py-3 px-6 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+								<div class="flex items-center justify-center">
+									<i data-lucide="upload" class="w-5 h-5 mr-2"></i>
+									<span id="uploadButtonText">Upload Video</span>
+								</div>
+							</button>
+			</form>
+						
+						<div id="uploadResult" class="mt-6 hidden">
+							<div class="bg-green-50 border border-green-200 rounded-lg p-4">
+								<div class="flex items-center">
+									<div class="bg-green-100 rounded-full p-2 mr-3">
+										<i data-lucide="check" class="w-5 h-5 text-green-600"></i>
+									</div>
+									<div>
+										<h4 class="font-medium text-green-900">Upload Successful!</h4>
+										<p class="text-sm text-green-700">Your video has been uploaded and a session has been created.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+		</section>
+
+				<!-- Video Analysis Section -->
+				<section id="sessionSection" class="hidden">
+					<div class="mb-8">
+						<h1 class="text-3xl font-bold text-gray-900 mb-2">Video Analysis</h1>
+						<p id="sessionInfo" class="text-gray-600">Analyze your video and mark jump takeoff and landing points</p>
+					</div>
+					
+					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+						<!-- Video Player -->
+						<div class="lg:col-span-2">
+							<div class="bg-white rounded-xl shadow-lg p-6">
+								<!-- Native Video Player -->
+								<div class="aspect-video bg-gray-900 rounded-lg overflow-hidden mb-4 relative">
+									<video id="player" controls class="w-full h-full object-contain">
+										Your browser does not support the video tag.
+									</video>
+									<!-- Jump Markers Overlay -->
+									<div id="jumpMarkers" class="absolute bottom-12 left-0 right-0 h-1 pointer-events-none">
+										<!-- Jump markers will be added here dynamically -->
+									</div>
+								</div>
+								
+								<!-- Jump Marking Controls -->
+								<div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mb-4">
+									<div class="flex space-x-3">
+										<button id="markTakeoff" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium">
+											<div class="flex items-center">
+												<i data-lucide="arrow-up" class="w-4 h-4 mr-2"></i>
+												Mark Takeoff
+											</div>
+										</button>
+										<button id="markLanding" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium">
+											<div class="flex items-center">
+												<i data-lucide="arrow-down" class="w-4 h-4 mr-2"></i>
+												Mark Landing
+											</div>
+										</button>
+										<button id="saveJumpsBtn" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+											<div class="flex items-center">
+												<i data-lucide="save" class="w-4 h-4 mr-2"></i>
+												Save Jumps
+											</div>
+										</button>
+									</div>
+									<div class="flex items-center space-x-4 text-sm text-gray-600">
+										<div class="flex items-center space-x-2">
+											<i data-lucide="clock" class="w-4 h-4"></i>
+											<span id="currentTime" class="font-mono font-bold">0.000s</span>
+										</div>
+										<div>
+											Frame: <span id="currentFrame" class="font-mono">0</span>
+										</div>
+									</div>
+								</div>
+								
+								<!-- Frame-by-Frame Controls -->
+								<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+									<div class="flex items-center justify-between mb-3">
+										<h4 class="font-medium text-blue-900">Precision Controls</h4>
+										<div class="flex items-center space-x-3">
+											<label class="text-sm text-blue-800">Speed:</label>
+											<select id="playbackSpeed" class="text-sm border border-blue-300 rounded px-2 py-1 bg-white">
+												<option value="0.1">0.1x</option>
+												<option value="0.25">0.25x</option>
+												<option value="0.5">0.5x</option>
+												<option value="1" selected>1x</option>
+												<option value="1.5">1.5x</option>
+												<option value="2">2x</option>
+											</select>
+										</div>
+									</div>
+									<div class="grid grid-cols-2 gap-4">
+										<!-- Frame Controls -->
+										<div class="text-center">
+											<div class="text-sm text-blue-800 mb-2">Frame Step (1/30s)</div>
+											<div class="flex justify-center space-x-2">
+												<button id="frameBackward" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors" title="Previous Frame">
+													<i data-lucide="chevron-left" class="w-4 h-4"></i>
+												</button>
+												<button id="frameForward" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors" title="Next Frame">
+													<i data-lucide="chevron-right" class="w-4 h-4"></i>
+												</button>
+											</div>
+										</div>
+										<!-- Second Controls -->
+										<div class="text-center">
+											<div class="text-sm text-blue-800 mb-2">Second Step (1s)</div>
+											<div class="flex justify-center space-x-2">
+												<button id="stepBackward" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors" title="Back 1 Second">
+													<i data-lucide="skip-back" class="w-4 h-4"></i>
+												</button>
+												<button id="stepForward" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition-colors" title="Forward 1 Second">
+													<i data-lucide="skip-forward" class="w-4 h-4"></i>
+												</button>
+											</div>
+										</div>
+									</div>
+									<div class="mt-3 text-xs text-blue-700 text-center">
+										Use arrow keys: ← → for steps, Shift + ← → for frames
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Quick Stats Panel -->
+						<div class="space-y-6">
+							<!-- Current Jump Info -->
+							<div class="bg-white rounded-xl shadow-lg p-6">
+								<h3 class="text-lg font-semibold text-gray-900 mb-4">Current Jump</h3>
+								<div id="currentJumpInfo" class="space-y-3">
+									<div class="text-center text-gray-500">
+										<i data-lucide="target" class="w-8 h-8 mx-auto mb-2"></i>
+										<p>Mark takeoff and landing to see jump details</p>
+									</div>
+								</div>
+							</div>
+							
+							<!-- Jump Timeline -->
+							<div class="bg-white rounded-xl shadow-lg p-6">
+								<div class="flex items-center justify-between mb-4">
+									<h3 class="text-lg font-semibold text-gray-900">Jump Timeline</h3>
+									<button id="clearAllJumps" class="text-red-600 hover:text-red-800 text-sm font-medium" style="display: none;">
+										<i data-lucide="trash-2" class="w-4 h-4 inline mr-1"></i>
+										Clear All
+									</button>
+								</div>
+								<div id="jumpTimeline" class="space-y-2">
+									<div class="text-center text-gray-500">
+										<i data-lucide="clock" class="w-6 h-6 mx-auto mb-2"></i>
+										<p class="text-sm">Marked jumps will appear here</p>
+									</div>
+								</div>
+							</div>
+							
+							<div class="bg-white rounded-xl shadow-lg p-6">
+								<h3 class="text-lg font-semibold text-gray-900 mb-4">Overall Stats</h3>
+								<div class="space-y-4">
+									<div class="flex justify-between items-center">
+										<span class="text-gray-600">Total Jumps</span>
+										<span id="totalJumps" class="font-semibold text-gray-900">0</span>
+									</div>
+									<div class="flex justify-between items-center">
+										<span class="text-gray-600">Best Height</span>
+										<span id="bestHeight" class="font-semibold text-primary-600">-</span>
+									</div>
+									<div class="flex justify-between items-center">
+										<span class="text-gray-600">Avg Height</span>
+										<span id="avgHeight" class="font-semibold text-gray-900">-</span>
+									</div>
+									<div class="flex justify-between items-center">
+										<span class="text-gray-600">Best Velocity</span>
+										<span id="bestVelocity" class="font-semibold text-primary-600">-</span>
+									</div>
+								</div>
+							</div>
+							
+							<!-- Instructions Panel -->
+							<div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+								<h3 class="text-lg font-semibold text-blue-900 mb-3">How to Use</h3>
+								<div class="space-y-2 text-sm text-blue-800">
+									<div class="flex items-start">
+										<i data-lucide="play" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
+										<span>Play the video and watch for jump sequences</span>
+									</div>
+									<div class="flex items-start">
+										<i data-lucide="arrow-up" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
+										<span>Click "Mark Takeoff" when feet leave the ground</span>
+									</div>
+									<div class="flex items-start">
+										<i data-lucide="arrow-down" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
+										<span>Click "Mark Landing" when feet touch the ground</span>
+									</div>
+									<div class="flex items-start">
+										<i data-lucide="save" class="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"></i>
+										<span>Save your jumps to proceed to analysis</span>
+									</div>
+								</div>
+							</div>
+						</div>
+			</div>
+		</section>
+
+				<!-- Review Section -->
+				<section id="jumpsSection" class="hidden">
+					<div class="mb-8">
+						<h1 class="text-3xl font-bold text-gray-900 mb-2">Review</h1>
+						<p class="text-gray-600">Review and manage your marked jumps with detailed performance metrics</p>
+					</div>
+					
+					<!-- Jump Summary Card -->
+					<div id="jumpSummaryCard" class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl shadow-lg p-6 mb-6 text-white hidden">
+						<h3 class="text-lg font-semibold mb-4">Jump Summary</h3>
+						<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+							<div class="text-center">
+								<div class="text-2xl font-bold" id="summaryTotalJumps">0</div>
+								<div class="text-sm text-primary-100">Total Jumps</div>
+							</div>
+							<div class="text-center">
+								<div class="text-2xl font-bold" id="summaryAvgHeight">-</div>
+								<div class="text-sm text-primary-100">Avg Height (cm)</div>
+							</div>
+							<div class="text-center">
+								<div class="text-2xl font-bold" id="summaryBestHeight">-</div>
+								<div class="text-sm text-primary-100">Best Height (cm)</div>
+							</div>
+							<div class="text-center">
+								<div class="text-2xl font-bold" id="summaryAvgVelocity">-</div>
+								<div class="text-sm text-primary-100">Avg Velocity (m/s)</div>
+							</div>
+							<div class="text-center">
+								<div class="text-2xl font-bold" id="summaryBestVelocity">-</div>
+								<div class="text-sm text-primary-100">Best Velocity (m/s)</div>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Jumps Table -->
+					<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+						<div class="px-6 py-4 border-b border-gray-200">
+							<div class="flex items-center justify-between">
+								<h3 class="text-lg font-semibold text-gray-900">Jump Data</h3>
+								<button id="saveJumps" class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium">
+									<div class="flex items-center">
+										<i data-lucide="save" class="w-4 h-4 mr-2"></i>
+										Save Jumps
+									</div>
+								</button>
+							</div>
+						</div>
+						
+						<div class="overflow-x-auto">
+							<table class="min-w-full divide-y divide-gray-200">
+								<thead class="bg-gray-50">
+									<tr>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Takeoff (ms)</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Landing (ms)</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Height (cm)</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flight Time (ms)</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Takeoff Velocity</th>
+										<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+									</tr>
+								</thead>
+								<tbody id="jumpsTable" class="bg-white divide-y divide-gray-200">
+									<!-- Jump rows will be inserted here -->
+								</tbody>
+			</table>
+						</div>
+						
+						<!-- Empty State -->
+						<div id="emptyJumpsState" class="text-center py-12">
+							<div class="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+								<i data-lucide="activity" class="w-8 h-8 text-gray-400"></i>
+							</div>
+							<h3 class="text-lg font-medium text-gray-900 mb-2">No jumps recorded yet</h3>
+							<p class="text-gray-600 mb-4">Start marking takeoff and landing points in your video to see jump metrics here.</p>
+							<button onclick="document.querySelector('[data-section=&quot;session&quot;]').click()" class="text-primary-600 hover:text-primary-700 font-medium">
+								Go to Video Analysis →
+							</button>
+						</div>
+			</div>
+		</section>
+
+				<!-- Process Video Section -->
+				<section id="analyzeSection" class="hidden">
+					<div class="mb-8">
+						<h1 class="text-3xl font-bold text-gray-900 mb-2">Process Video</h1>
+						<p class="text-gray-600">Generate slow-motion clips with overlays for your analyzed jumps</p>
+					</div>
+					
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<!-- Processing Options -->
+						<div class="bg-white rounded-xl shadow-lg p-6">
+							<h3 class="text-lg font-semibold text-gray-900 mb-6">Processing Options</h3>
+							<form id="analyzeForm" class="space-y-6">
+								<div>
+									<label for="interpolationFps" class="block text-sm font-medium text-gray-700 mb-2">Interpolation FPS</label>
+									<select id="interpolationFps" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+										<option value="30">30 FPS (Faster processing)</option>
+										<option value="60" selected>60 FPS (Balanced)</option>
+										<option value="120">120 FPS (High quality)</option>
+					</select>
+									<p class="text-xs text-gray-500 mt-1">Higher FPS results in smoother slow motion but takes longer to process</p>
+								</div>
+								
+								<div>
+									<label for="workFactor" class="block text-sm font-medium text-gray-700 mb-2">Work Factor</label>
+									<input type="number" id="workFactor" min="1" value="1" 
+										class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" />
+									<p class="text-xs text-gray-500 mt-1">Processing intensity multiplier (1 = standard, higher = more detailed)</p>
+								</div>
+								
+								<!-- Additional options moved from Admin: Slow Factor, Preset -->
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div>
+										<label for="slowFactor" class="block text-sm font-medium text-gray-700 mb-2">Slow Factor</label>
+										<input type="number" id="slowFactor" min="1" max="8" step="0.5" value="4"
+											class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" />
+									</div>
+									<div>
+										<label for="preset" class="block text-sm font-medium text-gray-700 mb-2">Preset</label>
+										<select id="preset" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+											<option value="ultrafast">Ultrafast</option>
+											<option value="superfast">Superfast</option>
+											<option value="veryfast">Veryfast</option>
+											<option value="faster">Faster</option>
+											<option value="fast">Fast</option>
+											<option value="medium" selected>Medium</option>
+											<option value="slow">Slow</option>
+											<option value="slower">Slower</option>
+											<option value="veryslow">Veryslow</option>
+										</select>
+									</div>
+								</div>
+
+								<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+									<div class="flex items-start">
+										<i data-lucide="info" class="w-5 h-5 text-yellow-600 mr-2 mt-0.5"></i>
+										<div class="text-sm">
+											<p class="font-medium text-yellow-800 mb-1">Performance Tip</p>
+											<p class="text-yellow-700">If processing takes too long (>5 minutes), try using <strong>30 FPS</strong> and <strong>Work Factor 1</strong> for faster results.</p>
+										</div>
+									</div>
+								</div>
+								
+								<button type="submit" class="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors font-medium">
+									<div class="flex items-center justify-center">
+										<i data-lucide="play-circle" class="w-5 h-5 mr-2"></i>
+										Start Processing
+									</div>
+								</button>
+			</form>
+						</div>
+						
+						<!-- Job Status -->
+						<div class="bg-white rounded-xl shadow-lg p-6">
+							<div class="flex items-center justify-between mb-6">
+								<h3 class="text-lg font-semibold text-gray-900">Processing Status</h3>
+								<button id="refreshResults" class="text-primary-600 hover:text-primary-700 p-2 rounded-lg hover:bg-primary-50 transition-colors">
+									<i data-lucide="refresh-cw" class="w-5 h-5"></i>
+								</button>
+							</div>
+							
+							<div id="jobStatusContainer" class="space-y-4">
+								<div id="noJobsMessage" class="text-center py-8">
+									<div class="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+										<i data-lucide="clock" class="w-8 h-8 text-gray-400"></i>
+									</div>
+									<h4 class="text-lg font-medium text-gray-900 mb-2">Ready to Process</h4>
+									<p class="text-gray-600">Configure your settings and click "Start Processing" to begin</p>
+								</div>
+								
+								<div id="jobStatus" class="hidden">
+									<div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+										<div class="flex items-center justify-between mb-6">
+											<div class="flex items-center">
+												<i data-lucide="loader" class="w-5 h-5 text-blue-600 mr-2 animate-spin"></i>
+												<span class="font-medium text-blue-900">Processing in progress...</span>
+											</div>
+											<button id="cancelJobBtn" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors hidden">
+												<i data-lucide="x" class="w-3 h-3 inline mr-1"></i>
+												Cancel Job
+											</button>
+										</div>
+										
+										<!-- Duration Display (Large) -->
+										<div class="bg-white rounded-lg p-6 mb-4">
+											<div class="text-gray-500 font-medium text-sm mb-2">Duration</div>
+											<div class="text-4xl font-bold text-blue-700" id="jobDuration">-</div>
+										</div>
+										
+										<!-- Job Details Grid -->
+										<div class="bg-white rounded-lg p-4 space-y-3">
+											<h4 class="font-semibold text-gray-900 text-sm mb-4">Processing Details</h4>
+											<div class="grid grid-cols-2 gap-4 text-sm">
+												<div>
+													<div class="text-gray-500 font-medium">Status</div>
+													<div class="text-blue-700 font-semibold mt-1" id="jobStatusDisplay">Queued</div>
+												</div>
+												<div>
+													<div class="text-gray-500 font-medium">Jump Count</div>
+													<div class="text-blue-700 font-semibold mt-1" id="jumpCount">-</div>
+												</div>
+												<div>
+													<div class="text-gray-500 font-medium">Target Type</div>
+													<div class="text-blue-700 font-semibold mt-1" id="targetType">-</div>
+												</div>
+												<div>
+													<div class="text-gray-500 font-medium">Work Factor</div>
+													<div class="text-blue-700 font-semibold mt-1" id="displayWorkFactor">-</div>
+												</div>
+												<div>
+													<div class="text-gray-500 font-medium">Interpolation FPS</div>
+													<div class="text-blue-700 font-semibold mt-1" id="displayInterpolationFps">-</div>
+												</div>
+										<div>
+											<div class="text-gray-500 font-medium">Slow Factor</div>
+											<div class="text-blue-700 font-semibold mt-1" id="displaySlowFactor">-</div>
+										</div>
+										<div>
+											<div class="text-gray-500 font-medium">Preset</div>
+											<div class="text-blue-700 font-semibold mt-1" id="displayPreset">-</div>
+										</div>
+												<div>
+													<div class="text-gray-500 font-medium">Settings</div>
+													<div class="text-blue-700 font-semibold mt-1" id="jobSettings">-</div>
+												</div>
+												<div>
+													<div class="text-gray-500 font-medium">Owner</div>
+													<div class="text-blue-700 font-semibold mt-1" id="jobOwner">-</div>
+												</div>
+												<div>
+													<div class="text-gray-500 font-medium">Queue Time</div>
+													<div class="text-blue-700 font-semibold mt-1" id="queueTime">-</div>
+												</div>
+												<div class="col-span-2">
+													<div class="text-gray-500 font-medium">Job ID</div>
+													<div class="text-blue-700 font-semibold font-mono text-xs mt-1" id="jobId">-</div>
+												</div>
+												<div class="col-span-2" id="stderrContainer" style="display: none;">
+													<div class="text-gray-500 font-medium">Last Output</div>
+													<div class="text-blue-700 font-semibold font-mono text-xs mt-1" id="stderrTail">-</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div id="jobSuccess" class="hidden">
+									<div class="bg-green-50 border border-green-200 rounded-lg p-4">
+										<div class="flex items-center mb-2">
+											<i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-2"></i>
+											<span class="font-medium text-green-900">Processing Complete!</span>
+										</div>
+										<p class="text-sm text-green-800">Your video clips have been generated successfully.</p>
+									</div>
+								</div>
+								
+								<div id="jobError" class="hidden">
+									<div class="bg-red-50 border border-red-200 rounded-lg p-4">
+										<div class="flex items-center mb-2">
+											<i data-lucide="alert-circle" class="w-5 h-5 text-red-600 mr-2"></i>
+											<span class="font-medium text-red-900">Processing Failed</span>
+										</div>
+										<p class="text-sm text-red-800" id="jobErrorText">An error occurred during processing.</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+		</section>
+
+				<!-- Results Section -->
+				<section id="resultsSection" class="hidden">
+					<div class="mb-8">
+						<h1 class="text-3xl font-bold text-gray-900 mb-2">Results</h1>
+						<p class="text-gray-600">View your processed videos and detailed session statistics</p>
+					</div>
+					
+					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+						<!-- Video Gallery -->
+						<div class="lg:col-span-2">
+							<div class="bg-white rounded-xl shadow-lg p-6">
+								<div class="flex items-center justify-between mb-6">
+									<h3 class="text-lg font-semibold text-gray-900">Generated Videos</h3>
+									<button id="downloadFirstClip" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+										<div class="flex items-center">
+											<i data-lucide="download" class="w-4 h-4 mr-2"></i>
+											Download First
+										</div>
+									</button>
+								</div>
+								<div id="clips" class="space-y-4">
+									<!-- Video clips will be inserted here -->
+								</div>
+								
+								<!-- Empty State for Clips -->
+								<div id="noClipsMessage" class="text-center py-12">
+									<div class="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4">
+										<i data-lucide="video-off" class="w-8 h-8 text-gray-400"></i>
+									</div>
+									<h4 class="text-lg font-medium text-gray-900 mb-2">No videos generated yet</h4>
+									<p class="text-gray-600">Process your video to generate slow-motion clips with overlays</p>
+								</div>
+							</div>
+						</div>
+						
+						<!-- Session Statistics -->
+						<div class="space-y-6">
+							<div class="bg-white rounded-xl shadow-lg p-6">
+								<h3 class="text-lg font-semibold text-gray-900 mb-4">Session Statistics</h3>
+								<div id="sessionStats" class="bg-gray-50 rounded-lg p-4 overflow-auto max-h-96">
+									<pre class="text-xs text-gray-700 whitespace-pre-wrap"></pre>
+								</div>
+							</div>
+						</div>
+					</div>
+		</section>
+
+				<!-- Admin Panel Section -->
+				<section id="adminSection" class="hidden">
+					<div class="mb-8">
+						<h1 class="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
+						<p class="text-gray-600">System monitoring and performance testing tools</p>
+					</div>
+					
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<!-- System Metrics -->
+						<div class="bg-white rounded-xl shadow-lg p-6">
+							<div class="flex items-center justify-between mb-6">
+								<h3 class="text-lg font-semibold text-gray-900">System Metrics</h3>
+								<div class="flex space-x-2">
+									<button id="clearStuckJobs" class="bg-yellow-600 text-white px-3 py-2 rounded-lg hover:bg-yellow-700 transition-colors font-medium text-sm">
+										<div class="flex items-center">
+											<i data-lucide="zap" class="w-3 h-3 mr-1"></i>
+											Clear Stuck Jobs
+										</div>
+									</button>
+									<button id="refreshMetrics" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium">
+										<div class="flex items-center">
+											<i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+											Refresh
+										</div>
+									</button>
+								</div>
+							</div>
+							<div id="systemMetrics" class="bg-gray-50 rounded-lg p-4 overflow-auto max-h-96">
+								<pre class="text-xs text-gray-700 whitespace-pre-wrap"></pre>
+							</div>
+						</div>
+						
+						<!-- CPU Load Testing -->
+						<div class="bg-white rounded-xl shadow-lg p-6">
+							<h3 class="text-lg font-semibold text-gray-900 mb-6">CPU Load Testing</h3>
+							<form id="stressForm" class="space-y-4">
+								<div class="grid grid-cols-2 gap-4">
+									<div>
+										<label for="stressSessionId" class="block text-sm font-medium text-gray-700 mb-1">Session ID</label>
+										<input type="text" id="stressSessionId" placeholder="Auto-filled" 
+											class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+									</div>
+									<div>
+										<label for="stressJobs" class="block text-sm font-medium text-gray-700 mb-1">Number of Jobs</label>
+										<input type="number" id="stressJobs" min="1" max="500" value="20" 
+											class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+									</div>
+								</div>
+								
+								<div class="grid grid-cols-2 gap-4">
+									<div>
+										<label for="stressFps" class="block text-sm font-medium text-gray-700 mb-1">Interpolation FPS</label>
+										<input type="number" id="stressFps" min="30" max="240" value="120" 
+											class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+									</div>
+									<div>
+										<label for="stressWork" class="block text-sm font-medium text-gray-700 mb-1">Work Factor</label>
+										<input type="number" id="stressWork" min="1" max="10" value="3" step="0.5" 
+											class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+									</div>
+								</div>
+								
+								<div class="grid grid-cols-2 gap-4">
+									<div>
+										<label for="stressSlow" class="block text-sm font-medium text-gray-700 mb-1">Slow Factor</label>
+										<input type="number" id="stressSlow" min="1" max="8" value="4" step="0.5" 
+											class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm" />
+									</div>
+									<div>
+										<label for="stressPreset" class="block text-sm font-medium text-gray-700 mb-1">Preset</label>
+										<select id="stressPreset" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
+											<option value="ultrafast">Ultrafast</option>
+											<option value="superfast">Superfast</option>
+											<option value="veryfast">Veryfast</option>
+											<option value="faster">Faster</option>
+											<option value="fast">Fast</option>
+											<option value="medium" selected>Medium</option>
+											<option value="slow">Slow</option>
+											<option value="slower">Slower</option>
+											<option value="veryslow">Veryslow</option>
+										</select>
+									</div>
+								</div>
+								
+								<button type="submit" class="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium">
+									<div class="flex items-center justify-center">
+										<i data-lucide="zap" class="w-5 h-5 mr-2"></i>
+										Start CPU Load Test
+									</div>
+								</button>
+			</form>
+							
+							<!-- Progress Bar -->
+							<div id="stressProgress" class="mt-6 hidden">
+								<div class="bg-gray-200 rounded-full h-3 mb-2">
+									<div id="progressFill" class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+								</div>
+								<div id="progressText" class="text-center text-sm font-medium text-gray-700">0% Complete</div>
+							</div>
+							
+							<div class="mt-4 flex justify-center">
+								<button id="refreshAdminOutputs" class="text-primary-600 hover:text-primary-700 px-4 py-2 rounded-lg hover:bg-primary-50 transition-colors font-medium">
+									<div class="flex items-center">
+										<i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+										Refresh Video Outputs
+									</div>
+								</button>
+							</div>
+						</div>
+					</div>
+					
+					<!-- Stress Test Results -->
+					<div class="mt-6 bg-white rounded-xl shadow-lg p-6">
+						<h3 class="text-lg font-semibold text-gray-900 mb-4">Test Results</h3>
+						<div id="stressResult" class="bg-gray-50 rounded-lg p-4 overflow-auto max-h-96">
+							<pre class="text-xs text-gray-700 whitespace-pre-wrap"></pre>
+						</div>
+				</div>
+				</section>
+			</div>
+		</div>
+	</main>
+
+	<script>
+		// Initialize Lucide icons
+		lucide.createIcons();
+	</script>
+	<script src="app.js" type="module"></script>
+</body>
+</html>

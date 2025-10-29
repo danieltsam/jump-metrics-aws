@@ -1,0 +1,39 @@
+{
+  "name": "jump-metrics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jump Metrics: upload jump video, mark takeoff/landing, compute flight time/height, render slow-mo clip with overlays.",
+  "main": "backend/src/server.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "nodemon backend/src/server.js",
+    "loadtest": "node scripts/loadtest.js",
+    "seed": "node scripts/dev-seed.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.891.0",
+    "@aws-sdk/client-dynamodb": "^3.891.0",
+    "@aws-sdk/client-s3": "^3.892.0",
+    "@aws-sdk/client-secrets-manager": "^3.891.0",
+    "@aws-sdk/client-sqs": "^3.891.0",
+    "@aws-sdk/client-ssm": "^3.891.0",
+    "@aws-sdk/lib-dynamodb": "^3.891.0",
+    "@aws-sdk/s3-request-presigner": "^3.892.0",
+    "aws-jwt-verify": "^4.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "supertest": "^7.1.3"
+  }
+}
