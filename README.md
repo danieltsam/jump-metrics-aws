@@ -11,7 +11,7 @@ https://github.com/user-attachments/assets/4a519500-993b-47d2-9bf3-50ccbf5773b8
 
 **Jump Metrics** is a web app that measures vertical jump height from user-uploaded videos.  
 Part of uni coursework for CAB432 that explored AWS. 
-<br>
+<br></br>
 <img width="738" height="556" alt="cab432Diagram drawio" src="https://github.com/user-attachments/assets/281a29f7-8b2e-4982-90d8-e26038758378" />
 
 
