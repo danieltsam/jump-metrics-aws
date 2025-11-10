@@ -1,10 +1,18 @@
 # Jump Metrics — Cloud-Native Vertical Jump Analyzer  
 
 
+
+https://github.com/user-attachments/assets/4a519500-993b-47d2-9bf3-50ccbf5773b8
+
+
+
+
 ## Overview  
 
 **Jump Metrics** is a web app that measures vertical jump height from user-uploaded videos.  
 Part of uni coursework for CAB432 that explored AWS. 
+<img width="738" height="556" alt="cab432Diagram drawio" src="https://github.com/user-attachments/assets/281a29f7-8b2e-4982-90d8-e26038758378" />
+
 
 ---
 
@@ -23,7 +31,7 @@ Part of uni coursework for CAB432 that explored AWS.
 ## ☁️ Architecture  
 
 - **Frontend:** S3 + CloudFront (HTTPS via ACM + Route53)  
-- **API (ECS):** Handles uploads and queues jobs  
+- **API (ECS):** Handles uploads and downloads from S3 for video storage and queues jobs  
 - **Worker (ECS):** Processes videos with FFmpeg  
 - **Cognito:** Manages user authentication and authorization  
 - **SQS:** Connects API and Worker, with DLQ + Lambda consumer  
@@ -34,4 +42,4 @@ Part of uni coursework for CAB432 that explored AWS.
 
 ---
 
-*site isn't live :(, aws too expensive*# jump-metrics-aws
+*site isn't live :(, aws too expensive*
